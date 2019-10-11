@@ -28,7 +28,7 @@ var app = (function () {
     };
 
 
-    var connectAndSubscribe = function (channel) {
+    var connectAndSubscribe = function () {
         console.info('Connecting to WS...');
         var socket = new SockJS('/stompendpoint');
         stompClient = Stomp.over(socket);
@@ -37,20 +37,14 @@ var app = (function () {
         stompClient.connect({}, function (frame) {
             console.log('Connected: ' + frame);
             // 2 par el topico y lo que realizara al recibir un evento
-            stompClient.subscribe('/topic/newpoint.'+channel, function (eventbody) {
+            stompClient.subscribe('/topic/newpoint', function (eventbody) {
                 var pointReceived=JSON.parse(eventbody.body);
-                app.receivePoint(parseInt(pointReceived.x),parseInt(pointReceived.y));
-            });
-            stompClient.subscribe('/topic/newpolygon.'+channel, function (eventbody) {
-                var points=JSON.parse(eventbody.body);
-                //TODO DRAW POLYGON
-                app.drawPolygon(points);
-                
+                alert("punto recibido en x:"+pointReceived.x+" \n punto recibido en y:"+pointReceived.y);
             });
         });
- 
- 
+
     };
+    
     
 
     return {
@@ -66,7 +60,8 @@ var app = (function () {
             var pt=new Point(px,py);
             console.info("publishing point at "+pt);
             addPointToCanvas(pt);
-            stompClient.send("/app/newpoint."+app.channel,{},JSON.stringify(pt));
+            stompClient.send("/topic/newpoint",{},JSON.stringify(pt));
+            //publicar el evento
         },
 
         disconnect: function () {
@@ -75,6 +70,10 @@ var app = (function () {
             }
             setConnected(false);
             console.log("Disconnected");
+        },
+        receivePoint:function(x,y){
+        	var pt=new Point(x,y);
+            addPointToCanvas(pt);
         }
     };
 
